@@ -1,6 +1,7 @@
 import { format, startOfDay } from 'date-fns';
 import React, { useState } from 'react';
 import { useLocalStorage } from '../utils';
+import { RecommendSlot } from './Calendar.view';
 import { DropDown } from './Drop.down';
 
 export interface DropDownMenu {
@@ -14,12 +15,14 @@ export function AddAppointment({
   getLatestAppointments,
   closePopup,
   calenderView,
+  recommendSlot,
 }: {
   from: number;
   to: number;
   getLatestAppointments: () => void;
   closePopup: (e: any) => void;
   calenderView?: boolean;
+  recommendSlot?: RecommendSlot | null;
 }) {
   const [title, setTitle] = useState<string>('');
   const [fromTime, setFromTime] = useState<number>(from);
@@ -49,6 +52,23 @@ export function AddAppointment({
     setLocalStorage(selectedDate, [
       ...(existingApp ? existingApp : []),
       { title, fromTime, toTime },
+    ]);
+    getLatestAppointments();
+  };
+
+  const addRecAppointment = () => {
+    if (!title) {
+      return alert('Please add some title to the appointment');
+    }
+    const selectedDate = startOfDay(new Date(from)).valueOf();
+    const existingApp = getLocalStorage(selectedDate);
+    setLocalStorage(selectedDate, [
+      ...(existingApp ? existingApp : []),
+      {
+        title,
+        fromTime: recommendSlot?.from,
+        toTime: recommendSlot?.to,
+      },
     ]);
     getLatestAppointments();
   };
@@ -99,6 +119,24 @@ export function AddAppointment({
               onSelect={(value: number) => setToTime(value)}
             />
           </div>
+          {calenderView &&
+            recommendSlot &&
+            Object.keys(recommendSlot).length > 0 && (
+              <button
+                onClick={addRecAppointment}
+                className='group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'>
+                Add Recommend Slot{' '}
+                {format(
+                  new Date(recommendSlot.from),
+                  'do/MMM/yyyy h:mm aa'
+                )}{' '}
+                -{' '}
+                {format(
+                  new Date(recommendSlot.to),
+                  'do/MMM/yyyy h:mm aa'
+                )}
+              </button>
+            )}
 
           <div className='flex gap-4'>
             <button

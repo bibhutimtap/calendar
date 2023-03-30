@@ -38,7 +38,9 @@ export const WeekDays = ({
             {day > 0 && new Date(day).getDate()}
           </div>
           {getLocalStorage(day).map((appointment: Appointment) => (
-            <div className='bg-indigo-400	rounded'>
+            <div
+              className='bg-indigo-400	rounded'
+              key={appointment.title + appointment.fromTime}>
               <div>{appointment.title} </div>
               <div>
                 {format(new Date(appointment.fromTime), 'h:mm aa')} -{' '}

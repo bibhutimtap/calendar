@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
-import { AddAppointment, WeekDays } from '.';
+import { AddAppointment, Appointment, WeekDays } from '.';
 import { Days } from '../Config';
 import { addDays, endOfDay, startOfDay } from 'date-fns';
 import { useLocalStorage } from '../utils';
+
+export interface RecommendSlot {
+  from: number;
+  to: number;
+}
 
 export const CalendarView = ({ date }: { date: Date }) => {
   const [appointmentDate, setAppointmentDate] = useState<number>();
@@ -10,6 +15,9 @@ export const CalendarView = ({ date }: { date: Date }) => {
   const [selectedDay, setSelectedDay] = useState<number>(0);
   const { getLocalStorage } = useLocalStorage();
   const [showPopup, setShowPopup] = useState<Boolean>(false);
+  const [recommendSlot, setRecommendSlot] = useState<
+    RecommendSlot | null | undefined
+  >();
 
   const getDateDetails = () => {
     const day = date.getDate();
@@ -51,9 +59,67 @@ export const CalendarView = ({ date }: { date: Date }) => {
     setWeeklyDateArr(_weeklyDateArr);
   };
 
+  const getRecomendations = () => {
+    const slots = appointmentDate && getLocalStorage(appointmentDate);
+    const recSlots = slots
+      ?.sort(
+        (a: Appointment, b: Appointment) => a.fromTime - b.fromTime
+      )
+      ?.reduce(
+        (
+          res: RecommendSlot,
+          appointment: Appointment,
+          currIndex: number,
+          array: Appointment[]
+        ) => {
+          if (res && Object.keys(res).length) {
+            return res;
+          } else if (
+            currIndex + 1 !== array.length &&
+            array[currIndex + 1].fromTime - appointment.toTime >=
+              1800000
+          ) {
+            return {
+              from: appointment.toTime,
+              to:
+                appointment.toTime - array[currIndex + 1].fromTime >
+                3600000
+                  ? appointment.toTime + 3600000
+                  : array[currIndex + 1].fromTime,
+            };
+          } else if (
+            !res &&
+            appointmentDate &&
+            currIndex === array.length - 1 &&
+            appointment.toTime + 1800000 <
+              addDays(new Date(appointmentDate), 1).valueOf()
+          ) {
+            return {
+              from: appointment.toTime,
+              to:
+                appointment.toTime + 3600000 <
+                addDays(new Date(appointmentDate), 1).valueOf()
+                  ? appointment.toTime + 3600000
+                  : appointment.toTime + 1800000,
+            };
+          }
+        },
+        {}
+      );
+    setRecommendSlot(recSlots);
+  };
+
+  useEffect(() => {
+    getRecomendations();
+  }, [appointmentDate]);
+
   useEffect(() => {
     dateStringToMillies();
   }, [date]);
+
+  useEffect(() => {
+    getRecomendations();
+  });
 
   return (
     <div className='h-screen w-full'>
@@ -86,6 +152,7 @@ export const CalendarView = ({ date }: { date: Date }) => {
           to={endOfDay(new Date(appointmentDate)).valueOf()}
           getLatestAppointments={() => setShowPopup(false)}
           closePopup={() => setShowPopup(false)}
+          recommendSlot={recommendSlot}
           calenderView={true}
         />
       )}

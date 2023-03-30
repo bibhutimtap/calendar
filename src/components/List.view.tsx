@@ -14,7 +14,6 @@ export const ListView = ({
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const { getLocalStorage } = useLocalStorage();
 
-
   useEffect(() => {
     setSlots(
       Array(24)
@@ -59,8 +58,8 @@ export const ListView = ({
                 key={slot}
                 appointments={appointments?.filter(
                   (appointment) =>
-                    appointment.fromTime >= from &&
-                    appointment.toTime <= to
+                    appointment.toTime >= from &&
+                    appointment.fromTime <= to
                 )}
               />
               {showPopup && selectedSlot === index && (

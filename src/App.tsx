@@ -14,7 +14,7 @@ function App() {
   const [selectedDate, setSelectedDate] = useState<any>(
     startOfDay(new Date()).valueOf()
   );
-  const [viewType, setViewType] = useState<ViewType>(ViewType.List);
+  const [viewType, setViewType] = useState<ViewType>(ViewType.Calendar);
 
   return (
     <div className='flex'>
